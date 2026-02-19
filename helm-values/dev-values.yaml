@@ -1,0 +1,38 @@
+# Dev environment Helm values for sysdig/shield chart
+# Extends base-values.yaml with dev-specific overrides
+
+cluster_config:
+  name: "dev-cluster"
+  tags:
+    environment: dev
+
+features:
+  # Keep admission control in dry run for dev
+  admission_control:
+    enabled: true
+    failure_policy: Ignore
+    dry_run: true
+
+  # Disable some heavy features for dev
+  posture:
+    host_posture:
+      enabled: false
+
+  vulnerability_management:
+    container_vulnerability_management:
+      enabled: true
+      target_workloads:
+        kubernetes:
+          image_source: node  # Faster for dev
+    host_vulnerability_management:
+      enabled: false
+    in_use:
+      enabled: false
+
+  detections:
+    kubernetes_audit:
+      enabled: false  # Disable audit in dev
+
+  monitor:
+    kube_state_metrics:
+      enabled: false  # Reduce overhead in dev

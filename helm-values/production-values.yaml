@@ -1,0 +1,78 @@
+# Production environment Helm values for sysdig/shield chart
+# Extends base-values.yaml with production-specific overrides
+
+cluster_config:
+  name: "production-cluster"
+  tags:
+    environment: production
+
+features:
+  # Strict admission control in production
+  admission_control:
+    enabled: true
+    failure_policy: Fail  # Block on policy violations
+    dry_run: false
+    container_vulnerability_management:
+      enabled: true
+    posture:
+      enabled: true
+    supply_chain:
+      enabled: true
+      image_signature:
+        enabled: false  # Enable if using signed images
+
+  # Full posture scanning
+  posture:
+    cluster_posture:
+      enabled: true
+    host_posture:
+      enabled: true
+
+  # Comprehensive vulnerability management
+  vulnerability_management:
+    container_vulnerability_management:
+      enabled: true
+      target_workloads:
+        kubernetes:
+          enabled: true
+          image_source: node+registry
+      platform_services_enabled: true
+      registry_ssl:
+        verify: true
+    host_vulnerability_management:
+      enabled: true
+    in_use:
+      enabled: true
+      integration_enabled: true
+
+  # All detection features
+  detections:
+    drift_control:
+      enabled: true
+    malware_control:
+      enabled: true
+    ml_policies:
+      enabled: true
+    kubernetes_audit:
+      enabled: true
+      timeout: 10
+    file_integrity_monitoring:
+      enabled: true
+
+  # Investigation features
+  investigations:
+    activity_audit:
+      enabled: true
+    network_security:
+      enabled: true
+    captures:
+      enabled: true
+
+  # Monitoring
+  monitor:
+    prometheus:
+      enabled: true
+    kubernetes_events:
+      enabled: true
+    kube_state_metrics:
+      enabled: true

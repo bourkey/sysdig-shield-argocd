@@ -1,0 +1,44 @@
+# Secrets - NEVER commit plaintext secrets
+secrets/*
+!secrets/README.md
+!secrets/external-secrets/
+!secrets/sealed-secrets/
+!secrets/argocd-vault-plugin/
+!secrets/cert-manager/
+*.key
+*.crt
+*.pem
+*-key.yaml
+*-secret.yaml
+
+# Environment files
+.env
+.env.local
+*.env
+
+# Kubernetes temporary files
+*.tmp
+*.swp
+*~
+
+# IDE files
+.vscode/
+.idea/
+*.iml
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Build artifacts
+dist/
+build/
+*.log
+
+# Helm
+charts/
+*.tgz
+
+# Test outputs
+test/results/
+test/logs/

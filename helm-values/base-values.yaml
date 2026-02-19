@@ -1,0 +1,108 @@
+# Base Helm values for Sysdig Shield deployment
+# Chart: sysdig/shield
+# Version: 1.28.0 (latest)
+
+cluster_config:
+  name: "kubernetes-cluster"
+  cluster_domain: cluster.local
+  cluster_type: generic
+  root_namespace: kube-system
+  tags: {}
+
+sysdig_endpoint:
+  region: us1
+  access_key_existing_secret: sysdig-agent
+  # access_key: "" # Use existing secret instead
+
+features:
+  # Admission Control (Admission Controller)
+  admission_control:
+    enabled: true
+    failure_policy: Ignore  # Change to Fail after validation in production
+    dry_run: false
+    timeout: 10
+    http_port: 8443
+    excluded_namespaces:
+      - kube-system
+      - kube-public
+      - kube-node-lease
+      - sysdig-shield
+    container_vulnerability_management:
+      enabled: true
+    posture:
+      enabled: true
+
+  # Kubernetes Metadata
+  kubernetes_metadata:
+    enabled: true
+
+  # Posture (KSPM)
+  posture:
+    cluster_posture:
+      enabled: true
+    host_posture:
+      enabled: true
+
+  # Vulnerability Management (Node Analyzer)
+  vulnerability_management:
+    container_vulnerability_management:
+      enabled: true
+      target_workloads:
+        kubernetes:
+          enabled: true
+          image_source: node+registry
+        non_orchestrated_containers:
+          enabled: false
+      platform_services_enabled: true
+      registry_ssl:
+        verify: true
+    host_vulnerability_management:
+      enabled: true
+    in_use:
+      enabled: true
+      integration_enabled: true
+
+  # Detections
+  detections:
+    drift_control:
+      enabled: false
+    malware_control:
+      enabled: false
+    ml_policies:
+      enabled: false
+    kubernetes_audit:
+      enabled: true
+      timeout: 10
+      http_port: 6443
+      excluded_namespaces:
+        - kube-system
+        - kube-public
+
+  # Investigations
+  investigations:
+    activity_audit:
+      enabled: false
+    live_logs:
+      enabled: false
+    network_security:
+      enabled: false
+    captures:
+      enabled: false
+
+  # Respond
+  respond:
+    rapid_response:
+      enabled: false
+    response_actions:
+      enabled: false
+
+  # Monitor
+  monitor:
+    app_checks:
+      enabled: false
+    prometheus:
+      enabled: true
+    kubernetes_events:
+      enabled: true
+    kube_state_metrics:
+      enabled: true

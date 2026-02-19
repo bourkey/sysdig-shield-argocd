@@ -1,0 +1,26 @@
+# Test deployment with security policy violations
+# Use this to test admission controller blocking
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: policy-violation-test
+  namespace: default
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: policy-violation
+  template:
+    metadata:
+      labels:
+        app: policy-violation
+    spec:
+      # Security violations for testing
+      hostNetwork: true
+      hostPID: true
+      containers:
+      - name: vulnerable-app
+        image: nginx:1.14  # Old version with known vulnerabilities
+        securityContext:
+          privileged: true
+          runAsUser: 0

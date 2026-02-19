@@ -1,0 +1,44 @@
+# Staging environment Helm values for sysdig/shield chart
+# Extends base-values.yaml with staging-specific overrides
+
+cluster_config:
+  name: "staging-cluster"
+  tags:
+    environment: staging
+
+features:
+  # Test admission control in enforce mode
+  admission_control:
+    enabled: true
+    failure_policy: Ignore
+    dry_run: false
+
+  posture:
+    cluster_posture:
+      enabled: true
+    host_posture:
+      enabled: true
+
+  vulnerability_management:
+    container_vulnerability_management:
+      enabled: true
+      target_workloads:
+        kubernetes:
+          image_source: node+registry
+    host_vulnerability_management:
+      enabled: true
+    in_use:
+      enabled: true
+      integration_enabled: true
+
+  detections:
+    kubernetes_audit:
+      enabled: true
+
+  monitor:
+    prometheus:
+      enabled: true
+    kubernetes_events:
+      enabled: true
+    kube_state_metrics:
+      enabled: true
