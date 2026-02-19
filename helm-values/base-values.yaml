@@ -65,9 +65,9 @@ features:
   # Detections
   detections:
     drift_control:
-      enabled: false
+      enabled: true
     malware_control:
-      enabled: false
+      enabled: true
     ml_policies:
       enabled: false
     kubernetes_audit:
@@ -81,20 +81,20 @@ features:
   # Investigations
   investigations:
     activity_audit:
-      enabled: false
+      enabled: true
     live_logs:
-      enabled: false
+      enabled: true
     network_security:
-      enabled: false
+      enabled: true
     captures:
-      enabled: false
+      enabled: true
 
   # Respond
   respond:
     rapid_response:
-      enabled: false
+      enabled: true
     response_actions:
-      enabled: false
+      enabled: true
 
   # Monitor
   monitor:

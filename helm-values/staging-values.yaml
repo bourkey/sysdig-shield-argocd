@@ -32,8 +32,28 @@ features:
       integration_enabled: true
 
   detections:
+    drift_control:
+      enabled: true  # Test runtime threat detection
+    malware_control:
+      enabled: true  # Test malware detection
     kubernetes_audit:
       enabled: true
+
+  investigations:
+    activity_audit:
+      enabled: true  # Test forensics capabilities
+    live_logs:
+      enabled: true  # Test log streaming
+    network_security:
+      enabled: true  # Test network monitoring
+    captures:
+      enabled: true  # Test packet capture
+
+  respond:
+    rapid_response:
+      enabled: true  # Test rapid response
+    response_actions:
+      enabled: true  # Test automated responses
 
   monitor:
     prometheus:

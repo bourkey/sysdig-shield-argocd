@@ -63,10 +63,19 @@ features:
   investigations:
     activity_audit:
       enabled: true
+    live_logs:
+      enabled: true  # Enable live log streaming for troubleshooting
     network_security:
       enabled: true
     captures:
       enabled: true
+
+  # Respond features
+  respond:
+    rapid_response:
+      enabled: true  # Enable rapid response for incident handling
+    response_actions:
+      enabled: true  # Enable automated response actions
 
   # Monitoring
   monitor:

@@ -30,8 +30,28 @@ features:
       enabled: false
 
   detections:
+    drift_control:
+      enabled: false  # Reduce overhead in dev
+    malware_control:
+      enabled: false  # Reduce overhead in dev
     kubernetes_audit:
       enabled: false  # Disable audit in dev
+
+  investigations:
+    activity_audit:
+      enabled: false  # Reduce overhead in dev
+    live_logs:
+      enabled: false  # Reduce overhead in dev
+    network_security:
+      enabled: false  # Reduce overhead in dev
+    captures:
+      enabled: false  # Reduce overhead in dev
+
+  respond:
+    rapid_response:
+      enabled: false  # Disable for dev
+    response_actions:
+      enabled: false  # Disable for dev
 
   monitor:
     kube_state_metrics:
