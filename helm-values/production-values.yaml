@@ -32,18 +32,10 @@ features:
   vulnerability_management:
     container_vulnerability_management:
       enabled: true
-      target_workloads:
-        kubernetes:
-          enabled: true
-          image_source: node+registry
-      platform_services_enabled: true
-      registry_ssl:
-        verify: true
     host_vulnerability_management:
       enabled: true
     in_use:
       enabled: true
-      integration_enabled: true
 
   # All detection features
   detections:
@@ -76,12 +68,3 @@ features:
       enabled: true  # Enable rapid response for incident handling
     response_actions:
       enabled: true  # Enable automated response actions
-
-  # Monitoring
-  monitor:
-    prometheus:
-      enabled: true
-    kubernetes_events:
-      enabled: true
-    kube_state_metrics:
-      enabled: true

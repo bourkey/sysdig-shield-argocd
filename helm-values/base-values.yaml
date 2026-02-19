@@ -4,10 +4,6 @@
 
 cluster_config:
   name: "kubernetes-cluster"
-  cluster_domain: cluster.local
-  cluster_type: generic
-  root_namespace: kube-system
-  tags: {}
 
 sysdig_endpoint:
   region: us1
@@ -47,15 +43,6 @@ features:
   vulnerability_management:
     container_vulnerability_management:
       enabled: true
-      target_workloads:
-        kubernetes:
-          enabled: true
-          image_source: node+registry
-        non_orchestrated_containers:
-          enabled: false
-      platform_services_enabled: true
-      registry_ssl:
-        verify: true
     host_vulnerability_management:
       enabled: true
     in_use:
@@ -92,17 +79,6 @@ features:
   # Respond
   respond:
     rapid_response:
-      enabled: true
-    response_actions:
-      enabled: true
-
-  # Monitor
-  monitor:
-    app_checks:
       enabled: false
-    prometheus:
-      enabled: true
-    kubernetes_events:
-      enabled: true
-    kube_state_metrics:
+    response_actions:
       enabled: true

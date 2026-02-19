@@ -21,9 +21,6 @@ features:
   vulnerability_management:
     container_vulnerability_management:
       enabled: true
-      target_workloads:
-        kubernetes:
-          image_source: node  # Faster for dev
     host_vulnerability_management:
       enabled: false
     in_use:
@@ -48,11 +45,5 @@ features:
       enabled: false  # Reduce overhead in dev
 
   respond:
-    rapid_response:
-      enabled: false  # Disable for dev
     response_actions:
       enabled: false  # Disable for dev
-
-  monitor:
-    kube_state_metrics:
-      enabled: false  # Reduce overhead in dev
