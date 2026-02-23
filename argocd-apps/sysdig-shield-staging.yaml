@@ -5,6 +5,7 @@ metadata:
   namespace: argocd
   annotations:
     notifications.argoproj.io/subscribe.on-sync-succeeded.slack: sysdig-deployments
+    notifications.argoproj.io/subscribe.on-sync-failed.slack: sysdig-alerts
     notifications.argoproj.io/subscribe.on-health-degraded.slack: sysdig-alerts
   finalizers:
   - resources-finalizer.argocd.argoproj.io

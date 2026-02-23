@@ -48,6 +48,15 @@ data:
       level: info
       format: json
 
+    # Audit logging for admission controller decisions
+    auditLog:
+      enabled: true
+      path: /var/log/sysdig/admission-controller-audit.log
+      maxSizeMB: 100
+      maxBackups: 5
+      includeRequestObject: true
+      includeResponseObject: false
+
     # Features
     features:
       k8sAuditDetections: true

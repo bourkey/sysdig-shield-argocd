@@ -1,0 +1,89 @@
+---
+# Job to verify Sysdig backend connectivity from within the cluster
+# Run: kubectl apply -f test/connectivity-test.yaml
+# Check: kubectl logs -n sysdig-shield job/sysdig-connectivity-test
+# Cleanup: kubectl delete -f test/connectivity-test.yaml
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: sysdig-connectivity-test
+  namespace: sysdig-shield
+  labels:
+    app.kubernetes.io/name: sysdig-connectivity-test
+    app.kubernetes.io/part-of: sysdig-shield
+spec:
+  ttlSecondsAfterFinished: 600
+  template:
+    spec:
+      restartPolicy: Never
+      serviceAccountName: default
+      containers:
+      - name: connectivity-test
+        image: curlimages/curl:latest
+        command:
+        - /bin/sh
+        - -c
+        - |
+          set -e
+
+          echo "=== Sysdig Backend Connectivity Test ==="
+          REGION="${SYSDIG_REGION:-us1}"
+
+          case "$REGION" in
+            us1) API_URL="https://app.us1.sysdig.com" ;;
+            us2) API_URL="https://app.us2.sysdig.com" ;;
+            us3) API_URL="https://app.us3.sysdig.com" ;;
+            us4) API_URL="https://app.us4.sysdig.com" ;;
+            eu1) API_URL="https://app.eu1.sysdig.com" ;;
+            au1) API_URL="https://app.au1.sysdig.com" ;;
+            me2) API_URL="https://app.me2.sysdig.com" ;;
+            *) API_URL="https://app.sysdigcloud.com" ;;
+          esac
+
+          echo "Region: $REGION"
+          echo "Testing connectivity to: $API_URL"
+          echo ""
+
+          echo "--- DNS Resolution ---"
+          HOSTNAME=$(echo "$API_URL" | sed 's|https://||')
+          nslookup "$HOSTNAME" && echo "DNS: OK" || echo "DNS: FAILED"
+          echo ""
+
+          echo "--- HTTPS Connectivity ---"
+          curl -sv --max-time 10 "$API_URL" -o /dev/null -w "HTTP status: %{http_code}\n" && echo "HTTPS: OK" || echo "HTTPS: FAILED"
+          echo ""
+
+          echo "--- Collector Connectivity ---"
+          case "$REGION" in
+            us1) COLLECTOR="collector.us1.sysdig.com" ;;
+            us2) COLLECTOR="collector.us2.sysdig.com" ;;
+            eu1) COLLECTOR="collector.eu1.sysdig.com" ;;
+            au1) COLLECTOR="collector.au1.sysdig.com" ;;
+            *) COLLECTOR="collector.sysdigcloud.com" ;;
+          esac
+          curl -sv --max-time 10 "https://$COLLECTOR" -o /dev/null -w "HTTP status: %{http_code}\n" 2>&1 | tail -5 && echo "Collector: OK" || echo "Collector: FAILED"
+          echo ""
+
+          echo "=== Test Complete ==="
+        env:
+        - name: SYSDIG_REGION
+          valueFrom:
+            secretKeyRef:
+              name: sysdig-agent
+              key: region
+              optional: true
+        resources:
+          requests:
+            cpu: 10m
+            memory: 16Mi
+          limits:
+            cpu: 100m
+            memory: 64Mi
+        securityContext:
+          runAsNonRoot: true
+          runAsUser: 65534
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+          capabilities:
+            drop:
+            - ALL

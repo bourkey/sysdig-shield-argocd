@@ -22,6 +22,10 @@ patches:
   # Webhook failure policy (enforce after validation)
   - path: webhook-failurepolicy-patch.yaml
 
+# Production-specific resources
+resources:
+  - hpa.yaml
+
 # Production-specific labels
 commonLabels:
   environment: production

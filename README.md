@@ -36,7 +36,10 @@ ArgoCD provides:
 │  ├── argocd-apps/          (ArgoCD Applications)            │
 │  ├── manifests/            (Kubernetes Manifests)           │
 │  ├── helm-values/          (Helm Values)                    │
-│  └── kustomize/            (Environment Overlays)           │
+│  ├── kustomize/            (Environment Overlays)           │
+│  ├── secrets/              (Secrets Management Templates)   │
+│  ├── test/                 (Test Manifests & Procedures)    │
+│  └── docs/                 (Operational Documentation)      │
 └────────────────────┬────────────────────────────────────────┘
                      │
                      │ GitOps Sync
@@ -46,6 +49,7 @@ ArgoCD provides:
 │  - Monitors Git repository                                   │
 │  - Syncs desired state to clusters                          │
 │  - Provides UI/CLI for management                           │
+│  - Sends Slack notifications for sync events                │
 └────────────────────┬────────────────────────────────────────┘
                      │
                      │ Deploy
@@ -57,10 +61,9 @@ ArgoCD provides:
 │  │         Sysdig Shield Components              │           │
 │  ├──────────────────────────────────────────────┤           │
 │  │ • Sysdig Agent (DaemonSet)                   │           │
-│  │ • Admission Controller (Deployment)          │           │
+│  │ • Admission Controller (Deployment + HPA)    │           │
 │  │ • Node Analyzer (DaemonSet)                  │           │
 │  │ • KSPM Collector (Deployment)                │           │
-│  │ • Rapid Response (Deployment)                │           │
 │  └──────────────────────────────────────────────┘           │
 └─────────────────────────────────────────────────────────────┘
 ```
@@ -97,72 +100,90 @@ kubectl create secret generic sysdig-agent \
 ### 3. Deploy with ArgoCD
 
 ```bash
-# Create ArgoCD application
-argocd app create sysdig-shield \
-  --repo https://github.com/yourusername/sysdig-shield-argocd.git \
-  --path manifests \
-  --dest-server https://kubernetes.default.svc \
-  --dest-namespace sysdig-shield \
-  --sync-policy automated
+# Deploy to dev (automated sync)
+argocd app create -f argocd-apps/sysdig-shield-dev.yaml
 
-# Or apply from manifest
-argocd app create -f argocd-apps/sysdig-shield.yaml
+# Deploy to staging (automated sync)
+argocd app create -f argocd-apps/sysdig-shield-staging.yaml
+
+# Deploy to production (manual sync)
+argocd app create -f argocd-apps/sysdig-shield-production.yaml
+argocd app sync sysdig-shield-production
 ```
 
 ### 4. Verify Deployment
 
 ```bash
 # Check ArgoCD application status
-argocd app get sysdig-shield
+argocd app get sysdig-shield-production
 
 # Verify pods are running
 kubectl get pods -n sysdig-shield
 
-# Check Sysdig agent connectivity
-kubectl exec -it daemonset/sysdig-agent -n sysdig-shield -- sysdig-agent-check
+# Run backend connectivity test
+kubectl apply -f test/connectivity-test.yaml
+kubectl wait --for=condition=complete job/sysdig-connectivity-test -n sysdig-shield --timeout=60s
+kubectl logs -n sysdig-shield job/sysdig-connectivity-test
+kubectl delete -f test/connectivity-test.yaml
 ```
 
 ## Repository Structure
 
 ```
 .
-├── argocd-apps/              # ArgoCD Application definitions
-│   ├── sysdig-shield.yaml   # Main Sysdig Shield application
-│   └── environments/        # Environment-specific applications
-│       ├── dev.yaml
-│       ├── staging.yaml
-│       └── production.yaml
+├── argocd-apps/                      # ArgoCD Application definitions
+│   ├── sysdig-shield-base.yaml       # Base application template
+│   ├── sysdig-shield-dev.yaml        # Dev application (auto-sync, Slack notifications)
+│   ├── sysdig-shield-staging.yaml    # Staging application (auto-sync, Slack notifications)
+│   └── sysdig-shield-production.yaml # Production application (manual sync, custom health)
 │
-├── manifests/               # Kubernetes manifests
-│   ├── namespace.yaml
+├── manifests/                        # Kubernetes manifests (direct apply)
+│   ├── 00-namespace.yaml
 │   ├── sysdig-agent/
-│   ├── admission-controller/
+│   ├── admission-controller/         # Includes HPA and audit logging config
 │   ├── node-analyzer/
-│   └── kspm-collector/
+│   ├── kspm-collector/
+│   ├── rbac/
+│   └── network-policies/
 │
-├── helm-values/             # Helm values files
+├── helm-values/                      # Helm values files
 │   ├── base-values.yaml
-│   └── environments/
-│       ├── dev-values.yaml
-│       ├── staging-values.yaml
-│       └── production-values.yaml
+│   ├── dev-values.yaml
+│   ├── staging-values.yaml
+│   └── production-values.yaml
 │
-├── kustomize/              # Kustomize overlays
-│   ├── base/
-│   │   └── kustomization.yaml
+├── kustomize/                        # Kustomize overlays
+│   ├── base/                         # Base configuration for all environments
 │   └── overlays/
 │       ├── dev/
 │       ├── staging/
-│       └── production/
+│       └── production/               # Includes HPA for admission controller
 │
-├── test/                   # Test manifests and policies
-│   ├── sample-deployment.yaml
-│   └── policy-tests/
+├── secrets/                          # Secrets management templates (no plaintext secrets)
+│   ├── README.md
+│   ├── sealed-secrets/
+│   ├── external-secrets/
+│   └── argocd-vault-plugin/
 │
-└── docs/                   # Documentation
-    ├── installation.md
-    ├── configuration.md
-    └── troubleshooting.md
+├── test/                             # Test manifests and validation procedures
+│   ├── connectivity-test.yaml        # Job to verify Sysdig backend connectivity
+│   ├── sample-deployment.yaml        # Compliant deployment for AC testing
+│   ├── policy-violation.yaml         # Policy violation test case
+│   ├── rollback-test.md              # Rollback validation procedures
+│   ├── validate-rbac.sh              # RBAC validation script
+│   └── validate-network-policies.sh  # Network policy validation script
+│
+└── docs/                             # Operational documentation
+    ├── installation.md               # Step-by-step installation guide
+    ├── configuration.md              # Environment variables and ConfigMap settings
+    ├── helm-integration.md           # Helm chart usage and feature reference
+    ├── testing.md                    # Pre/post deployment validation procedures
+    ├── monitoring.md                 # Prometheus/Grafana setup and alert rules
+    ├── maintenance.md                # Backup/DR procedures and on-call runbooks
+    ├── security.md                   # Security hardening checklist
+    ├── troubleshooting.md            # Common issues and solutions
+    ├── incident-response.md          # P1/P2 incident procedures and escalation
+    └── upgrade.md                    # Upgrade and rollback procedures
 ```
 
 ## Configuration
@@ -213,13 +234,31 @@ Use Kustomize overlays for environment-specific configurations:
 # Deploy to development
 argocd app create sysdig-shield-dev \
   --path kustomize/overlays/dev \
-  --dest-namespace sysdig-shield-dev
+  --dest-namespace sysdig-shield
 
 # Deploy to production
-argocd app create sysdig-shield-prod \
+argocd app create sysdig-shield-production \
   --path kustomize/overlays/production \
-  --dest-namespace sysdig-shield-prod
+  --dest-namespace sysdig-shield
 ```
+
+### Environment Differences
+
+| Feature | Dev | Staging | Production |
+|---------|-----|---------|------------|
+| Sync | Automated | Automated | Manual |
+| Webhook failurePolicy | Ignore | Ignore | Fail |
+| AC replicas | 1 | 2 | 3 (min) |
+| HPA | No | No | Yes (3-8 replicas) |
+| PodDisruptionBudget | No | No | Yes |
+| Slack notifications | Yes | Yes | Yes |
+| Audit logging | Yes | Yes | Yes |
+
+## Admission Controller
+
+The admission controller is configured with audit logging enabled across all environments. The audit log records admission decisions to `/var/log/sysdig/admission-controller-audit.log`.
+
+In production, the admission controller uses `failurePolicy: Fail` (enforcing) and is backed by a HorizontalPodAutoscaler that scales between 3 and 8 replicas based on CPU (70%) and memory (80%) utilization.
 
 ## Security
 
@@ -255,13 +294,24 @@ spec:
 #### Option 3: ArgoCD Vault Plugin
 Configure ArgoCD to inject secrets from HashiCorp Vault at deployment time.
 
+Templates for all three approaches are provided in the `secrets/` directory.
+
 ### RBAC
 
 Sysdig Shield requires cluster-level permissions. Review and adjust RBAC manifests in `manifests/rbac/` to meet your security requirements.
 
 ## Monitoring
 
-Monitor the health of Sysdig Shield components:
+Monitor the health of Sysdig Shield components using Prometheus and Grafana. Component metrics are exposed on the following ports:
+
+| Component | Port | Path |
+|-----------|------|------|
+| sysdig-agent | 24231 | /metrics |
+| admission-controller | 8080 | /metrics |
+| node-analyzer | 8080 | /metrics |
+| kspm-collector | 8080 | /metrics |
+
+For full Prometheus alert rules and Grafana dashboard configuration, see [docs/monitoring.md](docs/monitoring.md).
 
 ```bash
 # Check all pods
@@ -274,8 +324,41 @@ kubectl logs -f daemonset/sysdig-agent -n sysdig-shield
 kubectl logs -f deployment/sysdig-admission-controller -n sysdig-shield
 
 # ArgoCD health status
-argocd app get sysdig-shield --show-health
+argocd app list | grep sysdig
 ```
+
+## Testing
+
+### Pre-Deployment Validation
+
+```bash
+# Validate manifests
+kubectl apply -f manifests/ --dry-run=server --recursive
+
+# Validate a Kustomize overlay
+kubectl kustomize kustomize/overlays/production/ | kubectl apply --dry-run=server -f -
+
+# Validate Helm values
+helm template sysdig sysdig/shield \
+  -f helm-values/base-values.yaml \
+  -f helm-values/production-values.yaml | kubectl apply --dry-run=server -f -
+
+# Run RBAC validation
+bash test/validate-rbac.sh
+
+# Run network policy validation
+bash test/validate-network-policies.sh
+
+# Test backend connectivity
+kubectl apply -f test/connectivity-test.yaml
+kubectl wait --for=condition=complete job/sysdig-connectivity-test -n sysdig-shield --timeout=60s
+kubectl logs -n sysdig-shield job/sysdig-connectivity-test
+kubectl delete -f test/connectivity-test.yaml
+```
+
+For complete pre/post deployment validation procedures, see [docs/testing.md](docs/testing.md).
+
+For rollback validation procedures, see [test/rollback-test.md](test/rollback-test.md).
 
 ## Troubleshooting
 
@@ -308,15 +391,17 @@ kubectl delete validatingwebhookconfiguration sysdig-admission-controller
 
 ```bash
 # View sync status and events
-argocd app get sysdig-shield --show-events
+argocd app get sysdig-shield-production --show-events
 
 # Manual sync with force
-argocd app sync sysdig-shield --force --prune
+argocd app sync sysdig-shield-production --force --prune
 
 # Refresh and hard refresh
-argocd app diff sysdig-shield
-argocd app sync sysdig-shield --force --replace
+argocd app diff sysdig-shield-production
+argocd app sync sysdig-shield-production --force --replace
 ```
+
+See [docs/troubleshooting.md](docs/troubleshooting.md) for the full troubleshooting guide.
 
 ## Upgrading
 
@@ -324,23 +409,40 @@ argocd app sync sysdig-shield --force --replace
 
 1. Update image tags or Helm chart versions in manifests
 2. Commit changes to Git
-3. ArgoCD will automatically sync (if auto-sync enabled)
+3. ArgoCD will automatically sync dev/staging (if auto-sync enabled)
 4. Monitor rollout:
 
 ```bash
-argocd app sync sysdig-shield
-argocd app wait sysdig-shield --health
+argocd app sync sysdig-shield-production
+argocd app wait sysdig-shield-production --health
 ```
 
 ### Rollback
 
 ```bash
 # View history
-argocd app history sysdig-shield
+argocd app history sysdig-shield-production
 
 # Rollback to specific revision
-argocd app rollback sysdig-shield <REVISION>
+argocd app rollback sysdig-shield-production <REVISION>
 ```
+
+See [docs/upgrade.md](docs/upgrade.md) for full upgrade procedures and [test/rollback-test.md](test/rollback-test.md) for rollback validation.
+
+## Documentation
+
+| Document | Description |
+|----------|-------------|
+| [docs/installation.md](docs/installation.md) | Step-by-step installation guide |
+| [docs/configuration.md](docs/configuration.md) | ConfigMap and environment variable reference |
+| [docs/helm-integration.md](docs/helm-integration.md) | Helm chart usage and feature configuration |
+| [docs/testing.md](docs/testing.md) | Pre/post deployment validation procedures |
+| [docs/monitoring.md](docs/monitoring.md) | Prometheus metrics, alert rules, and Grafana dashboards |
+| [docs/maintenance.md](docs/maintenance.md) | Backup/DR procedures and on-call runbooks |
+| [docs/security.md](docs/security.md) | Security hardening checklist |
+| [docs/troubleshooting.md](docs/troubleshooting.md) | Common issues and diagnostic commands |
+| [docs/incident-response.md](docs/incident-response.md) | P1/P2 incident procedures and escalation paths |
+| [docs/upgrade.md](docs/upgrade.md) | Upgrade and rollback procedures |
 
 ## Contributing
 
@@ -373,4 +475,4 @@ For issues and questions:
 ---
 
 **Maintained by**: Nick Bourke
-**Last Updated**: 2026-02-18
+**Last Updated**: 2026-02-23

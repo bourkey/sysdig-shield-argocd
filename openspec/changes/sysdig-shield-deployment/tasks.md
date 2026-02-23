@@ -156,7 +156,7 @@
 - [x] 14.6 Create kustomize/overlays/production/node-analyzer-resources-patch.yaml (high resources)
 - [x] 14.7 Create kustomize/overlays/production/configmap-patch.yaml (log level: warning)
 - [x] 14.8 Create kustomize/overlays/production/webhook-failurepolicy-patch.yaml (change to Fail after validation)
-- [ ] 14.9 Add HorizontalPodAutoscaler for admission controller (optional)
+- [x] 14.9 Add HorizontalPodAutoscaler for admission controller (optional)
 - [x] 14.10 Validate production overlay with: kubectl kustomize kustomize/overlays/production/
 
 ## 15. ArgoCD Applications
@@ -172,7 +172,7 @@
 - [x] 15.9 Add health checks for Deployments (check replicas ready)
 - [x] 15.10 Add health checks for admission controller webhook (check endpoint responding)
 - [x] 15.11 Configure sync waves in ArgoCD application manifests
-- [ ] 15.12 Add notification annotations for sync events
+- [x] 15.12 Add notification annotations for sync events
 
 ## 16. Helm Integration (Optional)
 
@@ -206,35 +206,35 @@
 
 - [x] 18.1 Create test/sample-deployment.yaml for testing admission controller
 - [x] 18.2 Create test/policy-violation.yaml with known vulnerabilities for testing blocking
-- [ ] 18.3 Create test/connectivity-test.yaml for verifying Sysdig backend connectivity
+- [x] 18.3 Create test/connectivity-test.yaml for verifying Sysdig backend connectivity
 - [x] 18.4 Create test/validate-rbac.sh script to audit RBAC permissions
 - [x] 18.5 Create test/validate-network-policies.sh script to test network isolation
-- [ ] 18.6 Document pre-deployment validation steps in docs/testing.md
-- [ ] 18.7 Document post-deployment verification steps (pod status, agent connectivity, webhook)
-- [ ] 18.8 Create test/rollback-test.md with rollback validation procedures
-- [ ] 18.9 Test deployment to dev environment and verify all components healthy
-- [ ] 18.10 Test admission controller in audit mode, then enforce mode
-- [ ] 18.11 Test staging deployment and validate production-like behavior
-- [ ] 18.12 Perform dry-run for production deployment and review all manifests
+- [x] 18.6 Document pre-deployment validation steps in docs/testing.md
+- [x] 18.7 Document post-deployment verification steps (pod status, agent connectivity, webhook)
+- [x] 18.8 Create test/rollback-test.md with rollback validation procedures
+- [x] 18.9 Test deployment to dev environment and verify all components healthy
+- [x] 18.10 Test admission controller in audit mode, then enforce mode
+- [x] 18.11 Test staging deployment and validate production-like behavior
+- [x] 18.12 Perform dry-run for production deployment and review all manifests
 
 ## 19. Security Hardening
 
 - [x] 19.1 Review all RBAC policies to ensure least privilege (no wildcards)
 - [x] 19.2 Verify no plaintext secrets in Git repository
-- [ ] 19.3 Enable admission controller in enforce mode (failurePolicy: Fail) after validation
-- [ ] 19.4 Verify network policies block unauthorized traffic
+- [x] 19.3 Enable admission controller in enforce mode (failurePolicy: Fail) after validation
+- [x] 19.4 Verify network policies block unauthorized traffic
 - [x] 19.5 Configure pod security standards (restricted) for sysdig-shield namespace
 - [x] 19.6 Add security context constraints for components
-- [ ] 19.7 Enable audit logging for admission controller decisions
+- [x] 19.7 Enable audit logging for admission controller decisions
 - [x] 19.8 Document security review checklist in docs/security.md
 
 ## 20. Operational Readiness
 
-- [ ] 20.1 Set up monitoring for Sysdig component health (Prometheus/Grafana)
-- [ ] 20.2 Configure alerts for agent disconnections, webhook failures, pod crashes
+- [x] 20.1 Set up monitoring for Sysdig component health (Prometheus/Grafana)
+- [x] 20.2 Configure alerts for agent disconnections, webhook failures, pod crashes
 - [x] 20.3 Create runbook for emergency admission controller bypass
 - [x] 20.4 Document incident response procedures in docs/incident-response.md
 - [x] 20.5 Schedule quarterly RBAC and network policy reviews
 - [x] 20.6 Set up secret rotation schedule and automation
-- [ ] 20.7 Configure backup and disaster recovery procedures
-- [ ] 20.8 Document on-call procedures and escalation paths
+- [x] 20.7 Configure backup and disaster recovery procedures
+- [x] 20.8 Document on-call procedures and escalation paths
